@@ -7,7 +7,7 @@ import { actions } from "./toolkit";
 const SignIn = () => {
 const [state, setState] = useState({ email: "", password: "" });
 // bacend ,malumot
-const { data } = useGetUsersQuery("/users");
+const { data } = useGetUsersQuery();
 const navigate =useNavigate()
 
 
