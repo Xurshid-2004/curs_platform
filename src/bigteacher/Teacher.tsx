@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useDeleteTeacherMutation, useGetTeachersQuery } from "./teacherApi";
 
 const Teacher = () => {
-  const { data } = useGetTeachersQuery("/teacher");
+  const { data } = useGetTeachersQuery();
 
   const [deleteTeacher] = useDeleteTeacherMutation();
   const navigate = useNavigate();

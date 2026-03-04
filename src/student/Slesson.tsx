@@ -3,7 +3,21 @@ import { Link, useNavigate } from "react-router-dom";
 import { useGetTeachersQuery } from "../bigteacher/teacherApi";
 import { Drawer } from "vaul";
 
-const Slesson = () => {
+interface Teacher {
+  id: string;
+  name: string;
+  description: string;
+  day: string;
+  type: string;
+  url: string;
+  video: string;
+  teacherId: string;
+  img?: string;
+}
+
+interface SlessonProps {}
+
+const Slesson: React.FC<SlessonProps> = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -14,13 +28,13 @@ const Slesson = () => {
     }
   }, []);
 
-  const { data: lesson } = useGetTeachersQuery("/teacher");
+  const { data: lesson } = useGetTeachersQuery();
   const [current, setCurrent] = useState(0);
   const [open, setOpen] = useState(false);
   const [category, setCategory] = useState("");
 
-  const Categories = Array.from(new Set(lesson?.map((item: any) => item.type || item.select)));
-  const info = lesson?.filter((item: any) => item.type === category || item.select === category);
+  const Categories = Array.from(new Set(lesson?.map((item: Teacher) => item.type)));
+  const info = lesson?.filter((item: Teacher) => item.type === category);
 
   const images = ["/img31.png", "/img30.png", "/img22.png"];
   useEffect(() => {
@@ -30,7 +44,7 @@ const Slesson = () => {
     return () => clearInterval(timer);
   }, [images.length]);
 
-  function pass(item: any) {
+  function pass(item: Teacher) {
     localStorage.setItem("lessonId", item.id);
     navigate("/folder");
   }
@@ -64,7 +78,7 @@ const Slesson = () => {
 
           {/* LESSON CARDS */}
           <div className="w-[900px] h-[350px] overflow-x-auto grid grid-cols-3 gap-4 p-4 rounded-xl border-2 border-white bg-white/10 backdrop-blur-md">
-            {info?.map((item: any) => (
+            {info?.map((item: Teacher) => (
               <div
                 key={item.id}
                 onClick={() => pass(item)}
@@ -88,7 +102,7 @@ const Slesson = () => {
           >
             <h3 className="text-xl font-bold mb-4">Select Category</h3>
             <div className="flex flex-col gap-3">
-              {Categories?.map((cat: any) => (
+              {Categories?.map((cat: string) => (
                 <button
                   key={cat}
                   onClick={() => { setCategory(cat); setOpen(false); }}

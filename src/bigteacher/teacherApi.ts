@@ -1,8 +1,18 @@
 import { createApi, fakeBaseQuery } from "@reduxjs/toolkit/query/react";
-import { db,  } from "../firebase";
+import { db } from "../firebase";
 import { ref, get, push, update, remove } from "firebase/database";
 
-
+interface Teacher {
+  id: string;
+  name: string;
+  description: string;
+  day: string;
+  type: string;
+  url: string;
+  video: string;
+  teacherId: string;
+  img?: string;
+}
 
 export const teacherApi = createApi({
   reducerPath: "teacherApi",
@@ -10,9 +20,8 @@ export const teacherApi = createApi({
   tagTypes: ["Teacher"],
 
   endpoints: (build) => ({
-
     // Barcha o'qituvchilarni olish
-    getTeachers: build.query({
+    getTeachers: build.query<Teacher[], void>({
       async queryFn() {
         try {
           const snapshot = await get(ref(db, "teacher"));
@@ -29,51 +38,47 @@ export const teacherApi = createApi({
           return { error: error.message };
         }
       },
-      providesTags: (result: any) =>
+      providesTags: (result: Teacher[] | undefined) =>
         result
           ? [
-              ...result.map(({ id }: any) => ({ type: "Teacher" as const, id })),
+              ...result.map(({ id }) => ({ type: "Teacher" as const, id })),
               { type: "Teacher" as const, id: "LIST" },
             ]
           : [{ type: "Teacher" as const, id: "LIST" }],
     }),
 
-    // Yangi o'qituvchi qo'shish (rasm File bo'lsa Storage ga yuklanadi)
-  
-addTeacher: build.mutation({
-  async queryFn(body) {
-    try {
-      const newRef = await push(ref(db, "teacher"), {
-        ...body,
-        img: body.img, // link to'g'ridan-to'g'ri saqlanadi
-      });
-      return { data: { id: newRef.key, ...body } };
-    } catch (error: any) {
-      return { error: error.message };
-    }
-  },
-  invalidatesTags: [{ type: "Teacher", id: "LIST" }],
-}),
-
-
-
-
+    // Yangi o'qituvchi qo'shish
+    addTeacher: build.mutation<Teacher, Partial<Teacher>>({
+      async queryFn(body) {
+        try {
+          const newRef = await push(ref(db, "teacher"), {
+            ...body,
+            img: body.img,
+          });
+          return { data: { id: newRef.key!, ...body } as Teacher };
+        } catch (error: any) {
+          return { error: error.message };
+        }
+      },
+      invalidatesTags: [{ type: "Teacher", id: "LIST" }],
+    }),
 
     // O'qituvchini tahrirlash
-  editTeacher: build.mutation({
-  async queryFn(data) {
-    try {
-      const { id, ...body } = data;
-      await update(ref(db, `teacher/${id}`), { ...body });
-      return { data: { id, ...body } };
-    } catch (error: any) {
-      return { error: error.message };
-    }
-  },
-  invalidatesTags: [{ type: "Teacher", id: "LIST" }],
-}),
+    editTeacher: build.mutation<Teacher, { id: string } & Partial<Teacher>>({
+      async queryFn(data) {
+        try {
+          const { id, ...body } = data;
+          await update(ref(db, `teacher/${id}`), { ...body });
+          return { data: { id, ...body } as Teacher };
+        } catch (error: any) {
+          return { error: error.message };
+        }
+      },
+      invalidatesTags: [{ type: "Teacher", id: "LIST" }],
+    }),
+
     // O'qituvchini o'chirish
-    deleteTeacher: build.mutation({
+    deleteTeacher: build.mutation<string, string>({
       async queryFn(id: string) {
         try {
           await remove(ref(db, `teacher/${id}`));
@@ -86,8 +91,6 @@ addTeacher: build.mutation({
     }),
   }),
 });
-
-
 
 export const {
   useGetTeachersQuery,

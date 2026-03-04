@@ -2,15 +2,24 @@ import { createApi, fakeBaseQuery } from "@reduxjs/toolkit/query/react";
 import { db } from "./firebase";
 import { ref, get, push, update } from "firebase/database";
 
+interface User {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  password: string;
+  role: string;
+  token: string;
+}
+
 export const userApi = createApi({
   reducerPath: "userApi",
   baseQuery: fakeBaseQuery(),
   tagTypes: ["User"],
 
   endpoints: (build) => ({
-
     // Barcha foydalanuvchilarni olish
-    getUsers: build.query({
+    getUsers: build.query<User[], void>({
       async queryFn() {
         try {
           const snapshot = await get(ref(db, "users"));
@@ -27,17 +36,17 @@ export const userApi = createApi({
           return { error: error.message };
         }
       },
-      providesTags: (result: any) =>
+      providesTags: (result: User[] | undefined) =>
         result
           ? [
-              ...result.map(({ id }: any) => ({ type: "User" as const, id })),
+              ...result.map(({ id }) => ({ type: "User" as const, id })),
               { type: "User" as const, id: "LIST" },
             ]
           : [{ type: "User" as const, id: "LIST" }],
     }),
 
     // Yangi foydalanuvchi qo'shish
-    addUser: build.mutation({
+    addUser: build.mutation<User, Partial<User>>({
       async queryFn(body) {
         try {
           const chars = "sdfghjjklzxcvbnbfghjkkjhghjm123456789876";
@@ -46,7 +55,7 @@ export const userApi = createApi({
           ).join("");
 
           const newRef = await push(ref(db, "users"), { ...body, token });
-          return { data: { id: newRef.key, ...body, token } };
+          return { data: { id: newRef.key!, ...body, token } as User };
         } catch (error: any) {
           return { error: error.message };
         }
@@ -55,12 +64,12 @@ export const userApi = createApi({
     }),
 
     // Foydalanuvchini tahrirlash
-    getEdit: build.mutation({
+    getEdit: build.mutation<User, { id: string } & Partial<User>>({
       async queryFn(data) {
         try {
           const { id, ...body } = data;
           await update(ref(db, `users/${id}`), body);
-          return { data: { id, ...body } };
+          return { data: { id, ...body } as User };
         } catch (error: any) {
           return { error: error.message };
         }
